@@ -1,7 +1,7 @@
 <div align="center">
   
-# DiffusionRet: Generative Text-Video Retrieval with Diffusion Model
-  
+# 【ICCV'2023 🔥】DiffusionRet: Generative Text-Video Retrieval with Diffusion Model
+[![Conference](http://img.shields.io/badge/ICCV-2023-FFD93D.svg)](https://iccv2023.thecvf.com/)
 [![Paper](http://img.shields.io/badge/Paper-arxiv.2303.09867-FF6B6B.svg)](https://arxiv.org/abs/2303.09867)
 </div>
 
@@ -22,6 +22,7 @@ If you find this paper useful, please consider staring 🌟 this repo and citing
 ```
 
 ## 📣 Updates
+* Jul 14 2023: Our **DiffusionRet** has been accepted by ICCV 2023! We will release the training code asap. 
 * Jun 28 2023: We release the inference code.
 * May 31 2023: Our paper is under review. After our paper is published, we will release the code as soon as possible.
 
