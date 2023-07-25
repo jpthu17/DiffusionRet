@@ -63,7 +63,7 @@ wget https://openaipublic.azureedge.net/clip/models/40d365715913c9da98579312b702
 |Checkpoint|Google Cloud|Baidu Yun|Peking University Yun|
 |:--------:|:--------------:|:-----------:|:-----------:|
 | MSR-VTT | [Download](https://drive.google.com/file/d/16eTeXS9EZnBWP8EcO00Jxi6ZwsIUUHW_/view?usp=sharing) | [Download](https://pan.baidu.com/s/1JVxwh5SxnE0rGcAe9dCP_g?pwd=3xzi) | [Download](https://disk.pku.edu.cn:443/link/989708CFB90C80B93F7297A5260F5582) |
-| ActivityNet Captions | [Download](https://drive.google.com/file/d/1KcajRwDJMNxSWrlgLGHJ4nFtwgv0UWdc/view?usp=drive_link) | [Download](https://pan.baidu.com/s/1Nn-jUCJcydXhB01CNRvsfg?pwd=qsbd) | [Download](https://disk.pku.edu.cn:443/link/0E4384D13EA6E1693EF400FC27053033) |
+| ActivityNet | [Download](https://drive.google.com/file/d/1KcajRwDJMNxSWrlgLGHJ4nFtwgv0UWdc/view?usp=drive_link) | [Download](https://pan.baidu.com/s/1Nn-jUCJcydXhB01CNRvsfg?pwd=qsbd) | [Download](https://disk.pku.edu.cn:443/link/0E4384D13EA6E1693EF400FC27053033) |
 
 </div>
 
