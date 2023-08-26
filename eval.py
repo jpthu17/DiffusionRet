@@ -62,7 +62,6 @@ def get_args(
                         help="choice a feature aggregation module for video.")
     parser.add_argument('--interaction', type=str, default='wti', help="interaction type for retrieval.")
     parser.add_argument('--num_hidden_layers', type=int, default=4)
-    parser.add_argument("--estimator", default=None, type=str, required=False, help=" Banzhaf Interaction Estimator.")
 
     parser.add_argument('--temp', type=float, default=1)
     parser.add_argument('--d_temp', type=float, default=100)

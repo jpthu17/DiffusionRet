@@ -57,7 +57,7 @@ wget https://openaipublic.azureedge.net/clip/models/40d365715913c9da98579312b702
 
 </div>
 
-### Text-video Retrieval
+### Model Zoo
 <div align=center>
 
 |Checkpoint|Google Cloud|Baidu Yun|Peking University Yun|
@@ -67,6 +67,7 @@ wget https://openaipublic.azureedge.net/clip/models/40d365715913c9da98579312b702
 
 </div>
 
+### Evaluate
 #### Eval on MSR-VTT
 ```shell
 CUDA_VISIBLE_DEVICES=0 \
@@ -108,6 +109,65 @@ eval.py \
 --init_model ${CHECKPOINT_PATH} \
 --output_dir ${OUTPUT_PATH}
 ```
+
+### Train
+#### Discrimination Pretrain 
+Train the feature extractor from the discrimination perspective.
+
+```shell
+CUDA_VISIBLE_DEVICES=0,1,2,3 \
+python -m torch.distributed.launch \
+--master_port 2502 \
+--nproc_per_node=4 \
+main_retrieval.py \
+--do_train 1 \
+--workers 8 \
+--n_display 50 \
+--epochs 5 \
+--lr 1e-4 \
+--coef_lr 1e-3 \
+--batch_size 128 \
+--batch_size_val 128 \
+--anno_path data/MSR-VTT/anns \
+--video_path ${DATA_PATH}/MSRVTT_Videos \
+--datatype msrvtt \
+--max_words 32 \
+--max_frames 12 \
+--video_framerate 1 \
+--stage discrimination \
+--output_dir ${OUTPUT_PATH}
+```
+
+#### Generation Finetune
+Optimize the generator from the generation perspective.
+
+```shell
+CUDA_VISIBLE_DEVICES=0,1,2,3 \
+python -m torch.distributed.launch \
+--master_port 2502 \
+--nproc_per_node=4 \
+main_retrieval.py \
+--do_train 1 \
+--workers 8 \
+--n_display 50 \
+--epochs 5 \
+--lr 1e-4 \
+--coef_lr 1e-3 \
+--batch_size 128 \
+--batch_size_val 128 \
+--anno_path data/MSR-VTT/anns \
+--video_path ${DATA_PATH}/MSRVTT_Videos \
+--datatype msrvtt \
+--max_words 32 \
+--max_frames 12 \
+--video_framerate 1 \
+--stage generation \
+--diffusion_steps 50 \
+--noise_schedule cosine \
+--init_model ${CHECKPOINT_PATH} \
+--output_dir ${OUTPUT_PATH}
+```
+
 
 ## 🎗️ Acknowledgments
 Our code is based on [EMCL](https://github.com/jpthu17/EMCL), [CLIP](https://github.com/openai/CLIP), [CLIP4Clip](https://github.com/ArrowLuo/CLIP4Clip/) and [DRL](https://github.com/foolwood/DRL). We sincerely appreciate for their contributions.

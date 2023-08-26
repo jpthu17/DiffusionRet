@@ -36,6 +36,7 @@ class DiffusionRet(nn.Module):
         self.config = config
         self.interaction = config.interaction
         self.agg_module = getattr(config, 'agg_module', 'meanP')
+        self.stage = getattr(config, 'stage', 'discrimination')
         backbone = getattr(config, 'base_encoder', "ViT-B/32")
 
         assert backbone in _PT_NAME
@@ -106,14 +107,26 @@ class DiffusionRet(nn.Module):
 
         self.loss_fct = CrossEn(config)
         self.loss_arcfct = ArcCrossEn(margin=10)
-        self.diffusion_model = Diffusion(cross_config.hidden_size, 0.1, self.config.temp)
-        self.diffusion_model_v = Diffusion_v(cross_config.hidden_size, 0.1, self.config.temp)
+
+        if self.stage == "generation":
+            self.diffusion_model = Diffusion(cross_config.hidden_size, 0.1, self.config.temp)
+            self.diffusion_model_v = Diffusion_v(cross_config.hidden_size, 0.1, self.config.temp)
+
+            for param in self.clip.parameters():
+                param.requires_grad = False  # not update by gradient
+            for param in self.transformerClip.parameters():
+                param.requires_grad = False  # not update by gradient
+            for param in self.frame_position_embeddings.parameters():
+                param.requires_grad = False  # not update by gradient
+
+            for param in self.text_weight_fc.parameters():
+                param.requires_grad = False  # not update by gradient
+            for param in self.video_weight_fc.parameters():
+                param.requires_grad = False  # not update by gradient
 
         self.apply(self.init_weights)  # random init must before loading pretrain
         self.clip.load_state_dict(state_dict, strict=False)
 
-        self.mse = MSE()
-        self.kl = KL()
         ## ===> Initialization trick [HARD CODE]
         new_state_dict = OrderedDict()
                 
@@ -137,6 +150,109 @@ class DiffusionRet(nn.Module):
 
         self.load_state_dict(new_state_dict, strict=False)  # only update new state (seqTransf/seqLSTM/tightTransf)
         ## <=== End of initialization trick
+
+    def forward(self, text_ids, text_mask, video, video_mask=None, idx=None, global_step=0,
+                schedule_sampler=None, diffusion=None):
+        text_ids = text_ids.view(-1, text_ids.shape[-1])
+        text_mask = text_mask.view(-1, text_mask.shape[-1])
+        video_mask = video_mask.view(-1, video_mask.shape[-1])
+        # B x N_v x 3 x H x W - >  (B x N_v) x 3 x H x W
+        video = torch.as_tensor(video).float()
+        if len(video.size()) == 5:
+            b, n_v, d, h, w = video.shape
+            video = video.view(b * n_v, d, h, w)
+        else:
+            b, pair, bs, ts, channel, h, w = video.shape
+            video = video.view(b * pair * bs * ts, channel, h, w)
+
+        text_feat, video_feat, cls = self.get_text_video_feat(text_ids, text_mask, video, video_mask, shaped=True)
+
+        if self.training:
+            if torch.cuda.is_available():  # batch merge here
+                idx = allgather(idx, self.config)
+                text_feat = allgather(text_feat, self.config)
+                video_feat = allgather(video_feat, self.config)
+                text_mask = allgather(text_mask, self.config)
+                video_mask = allgather(video_mask, self.config)
+                cls = allgather(cls, self.config)
+                torch.distributed.barrier()  # force sync
+
+            idx = idx.view(-1, 1)
+            idx_all = idx.t()
+            pos_idx = torch.eq(idx, idx_all).float()
+            sim_targets = pos_idx / pos_idx.sum(1, keepdim=True)
+            logit_scale = self.clip.logit_scale.exp()
+            loss, discrimination_loss, generation_loss = 0., 0., 0.
+
+            t2v_logits, v2t_logits = self.get_similarity_logits(text_feat, cls, video_feat,
+                                                                    text_mask, video_mask, shaped=True)
+
+            discrimination_loss_t2v = self.loss_fct(t2v_logits * logit_scale)
+            discrimination_loss_v2t = self.loss_fct(v2t_logits * logit_scale)
+            discrimination_loss += (discrimination_loss_t2v + discrimination_loss_v2t) / 2
+            loss += discrimination_loss
+
+            if self.stage == "discrimination":
+                return loss, discrimination_loss, torch.zeros_like(discrimination_loss)
+
+            t, weights = schedule_sampler.sample(cls.shape[0], text_feat.device)
+            num = self.config.num
+
+            cls, video_feat = cls.detach(), video_feat.detach()
+            t2v_logits, v2t_logits = t2v_logits.detach(), v2t_logits.detach()
+            a, b = cls.size(0), video_feat.size(1)
+
+            mask = torch.eq(idx, idx.t())
+            weights_t2v = F.softmax(t2v_logits, dim=1)
+            weights_v2t = F.softmax(v2t_logits, dim=1)
+            weights_t2v.masked_fill_(mask, -1)
+            weights_v2t.masked_fill_(mask, -1)
+
+
+            video_embeds_neg = []
+            video_mask_neg = []
+            for b in range(weights_t2v.size(0)):
+                _, neg_idx = weights_t2v[b].topk(num, largest=True, sorted=True)
+                temp = [video_feat[b, :, :]]
+                temp_ = [video_mask[b, :]]
+                for i in neg_idx:
+                    temp.append(video_feat[i, :, :])
+                    temp_.append(video_mask[i, :])
+                video_embeds_neg.append(torch.stack(temp, dim=0))
+                video_mask_neg.append(torch.stack(temp_, dim=0))
+            video_embeds_neg = torch.stack(video_embeds_neg, dim=0)
+            video_mask_neg = torch.stack(video_mask_neg, dim=0)
+
+            text_embeds_neg = []
+            for b in range(weights_v2t.size(0)):
+                _, neg_idx = weights_v2t[b].topk(num, largest=True, sorted=True)
+                temp = [cls[b]]
+                for i in neg_idx:
+                    temp.append(cls[i])
+                text_embeds_neg.append(torch.stack(temp, dim=0))
+            text_embeds_neg = torch.stack(text_embeds_neg, dim=0)
+
+            pos = torch.ones((cls.size(0), 1), dtype=torch.float)
+            if self.config.neg == 0:
+                neg = torch.zeros((cls.size(0), num), dtype=torch.float)
+            else:
+                neg = -torch.ones((cls.size(0), num), dtype=torch.float)
+            micro = torch.cat([pos, neg], dim=1).to(cls.device)
+
+            output = diffusion.training_losses(self.diffusion_model, micro, t, {"text_emb": cls,
+                                                                                "video_emb": video_embeds_neg,
+                                                                                "video_mask": video_mask_neg},
+                                               temp=self.config.d_temp)
+            generation_loss += output["kl_loss"]
+
+            output = diffusion.training_losses(self.diffusion_model_v, micro, t, {"text_emb": text_embeds_neg,
+                                                                                  "video_emb": video_feat,
+                                                                                  "video_mask": video_mask},
+                                               temp=self.config.d_temp)
+            generation_loss += output["kl_loss"]
+
+            loss += generation_loss
+            return loss, discrimination_loss, generation_loss
 
     def get_text_feat(self, text_ids, text_mask, shaped=False):
         if shaped is False:
@@ -300,19 +416,18 @@ class DiffusionRet(nn.Module):
 
 def create_gaussian_diffusion(args):
     # default params
-    steps=args.diffusion_steps
-    learn_sigma=False
-    sigma_small=False
-    use_kl=False
-    predict_xstart=True
-    rescale_timesteps=False
-    rescale_learned_sigmas=False
-    timestep_respacing=""
+    steps = args.diffusion_steps
+    learn_sigma = False
+    sigma_small = False
+    predict_xstart = True
+    rescale_timesteps = False
+    rescale_learned_sigmas = False
+    timestep_respacing = ""
     scale_beta = 1.
 
     betas = gd.get_named_beta_schedule(args.noise_schedule, steps)
 
-    loss_type = gd.LossType.MSE
+    loss_type = gd.LossType.KL
 
     if not timestep_respacing:
         timestep_respacing = [steps]
