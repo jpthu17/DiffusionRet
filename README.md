@@ -31,7 +31,7 @@ If you find this paper useful, please consider staring 🌟 this repo and citing
 Existing text-video retrieval solutions are, in essence, discriminant models focused on maximizing the conditional likelihood, i.e., p(candidates|query). While straightforward, this de facto paradigm overlooks the underlying data distribution p(query), which makes it challenging to identify out-of-distribution data. To address this limitation, we creatively tackle this task from a generative viewpoint and model the correlation between the text and the video as their joint probability p(candidates,query). This is accomplished through a diffusion-based text-video retrieval framework (DiffusionRet), which models the retrieval task as a process of gradually generating joint distribution from noise.
 
 <div align="center">
-<img src="pictures/fig.png" width="400px">
+<img src="pictures/fig.png" width="800px">
 </div>
 
 ## 🚀 Quick Start
