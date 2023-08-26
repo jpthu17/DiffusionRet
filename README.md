@@ -22,9 +22,17 @@ If you find this paper useful, please consider staring 🌟 this repo and citing
 ```
 
 ## 📣 Updates
+* Aug 27 2023: We release the training code.
 * Jul 14 2023: Our **DiffusionRet** has been accepted by ICCV 2023! We will release the training code asap. 
 * Jun 28 2023: We release the inference code.
 * May 31 2023: Our paper is under review. After our paper is published, we will release the code as soon as possible.
+
+## 📕 Overview
+Existing text-video retrieval solutions are, in essence, discriminant models focused on maximizing the conditional likelihood, i.e., p(candidates|query). While straightforward, this de facto paradigm overlooks the underlying data distribution p(query), which makes it challenging to identify out-of-distribution data. To address this limitation, we creatively tackle this task from a generative viewpoint and model the correlation between the text and the video as their joint probability p(candidates,query). This is accomplished through a diffusion-based text-video retrieval framework (DiffusionRet), which models the retrieval task as a process of gradually generating joint distribution from noise.
+
+<div align="center">
+<img src="pictures/fig.png" width="400px">
+</div>
 
 ## 🚀 Quick Start
 ### Setup
