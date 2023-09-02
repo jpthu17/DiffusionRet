@@ -360,7 +360,7 @@ def train_epoch(epoch, args, model, train_dataloader, device, n_gpu, optimizer,
                 if R1 < ema_R1:
                     best_score = ema_R1
                     # best_output_model_file = output_ema_model_file
-                    torch.save(ema_model.state_dict() if hasattr(model, 'module') else model.state_dict(),
+                    torch.save(ema_model.module.state_dict() if hasattr(ema_model, 'module') else ema_model.state_dict(),
                                'best.pth')
                 else:
                     best_score = R1
@@ -703,7 +703,7 @@ def main():
                     if R1 < ema_R1:
                         best_score = ema_R1
                         # best_output_model_file = output_ema_model_file
-                        torch.save(ema_model.state_dict() if hasattr(model, 'module') else model.state_dict(),
+                        torch.save(ema_model.module.state_dict() if hasattr(ema_model, 'module') else ema_model.state_dict(),
                                'best.pth')
                     else:
                         best_score = R1
