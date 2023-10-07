@@ -70,7 +70,7 @@ def get_args(
     parser.add_argument('--interaction', type=str, default='wti', help="interaction type for retrieval.")
     parser.add_argument('--num_hidden_layers', type=int, default=4)
 
-    parser.add_argument("--stage", default='discrimination', choices=['discrimination', 'generation'], type=str)
+    parser.add_argument("--stage", default='generation', choices=['discrimination', 'generation'], type=str)
 
     parser.add_argument('--temp', type=float, default=1)
     parser.add_argument('--d_temp', type=float, default=100)
