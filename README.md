@@ -21,6 +21,22 @@ If you find this paper useful, please consider staring 🌟 this repo and citing
 }
 ```
 
+<details open><summary>💡 I also have other text-video retrieval projects that may interest you ✨. </summary><p>
+
+> [**Video-Text as Game Players: Hierarchical Banzhaf Interaction for Cross-Modal Representation Learning**](https://arxiv.org/abs/2303.14369)<br>
+> Accepted by CVPR 2023 (Highlight) | [[HBI Code]](https://github.com/jpthu17/HBI)<br>
+> Peng Jin, Jinfa Huang, Pengfei Xiong, Shangxuan Tian, Chang Liu, Xiangyang Ji, Li Yuan, Jie Chen
+
+
+> [**Expectation-Maximization Contrastive Learning for Compact Video-and-Language Representations**](https://arxiv.org/abs/2211.11427)<br>
+> Accepted by NeurIPS 2022 | [[EMCL Code]](https://github.com/jpthu17/EMCL)<br>
+> Peng Jin, Jinfa Huang, Fenglin Liu, Xian Wu, Shen Ge, Guoli Song, David Clifton, Jie Chen
+
+> [**Text-Video Retrieval with Disentangled Conceptualization and Set-to-Set Alignment**](https://arxiv.org/abs/2305.12218)<br>
+> Accepted by IJCAI 2023 | [[DiCoSA Code]](https://github.com/jpthu17/DiCoSA)<br>
+> Peng Jin, Hao Li, Zesen Cheng, Jinfa Huang, Zhennan Wang, Li Yuan, Chang Liu, Jie Chen
+</p></details>
+
 ## 📣 Updates
 * Aug 27 2023: We release the training code.
 * Jul 14 2023: Our **DiffusionRet** has been accepted by ICCV 2023! We will release the training code asap. 
