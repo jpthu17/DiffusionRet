@@ -6,5 +6,6 @@ tqdm
 opencv-python
 functional
 timm
+boto3
 # torch==1.8.1+cu102
 # torchvision==0.9.1+cu102
