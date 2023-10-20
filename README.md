@@ -13,10 +13,11 @@ from a generative perspective.
 ## 📌 Citation
 If you find this paper useful, please consider staring 🌟 this repo and citing 📑 our paper:
 ```
-@article{jin2023diffusionret,
-  title={Diffusionret: Generative text-video retrieval with diffusion model},
+@inproceedings{jin2023diffusionret,
+  title={DiffusionRet: Generative Text-Video Retrieval with Diffusion Model},
   author={Jin, Peng and Li, Hao and Cheng, Zesen and Li, Kehan and Ji, Xiangyang and Liu, Chang and Yuan, Li and Chen, Jie},
-  journal={arXiv preprint arXiv:2303.09867},
+  booktitle={ICCV},
+  pages={2470-2481},
   year={2023}
 }
 ```
